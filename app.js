@@ -1,10 +1,11 @@
 require("babel-register");
 const express=require("express");
 const morgan = require("morgan");
-const functStatus= require("functionStatus")
+const {success,error}= require("functionStatus")
 const app= express()
-const APP_ACCUEIL="/"
+const APP_PUT="/api/v1/members/:id"
 const APP_VERSION="/api/v1/members"
+
 
 const members=[
     {
@@ -40,10 +41,26 @@ app.post(APP_VERSION,(req,res)=>{
            id:members.length+1,
            name:req.body.name
        })
-    res.status(201).json(functStatus.success(members))
+    res.status(201).json(success(members))
    }else{
-    res.status(401).json(functStatus.error("body vide!"))
+    res.status(401).json(error("body vide!"))
    }
+})
+
+app.put(APP_PUT,(req,res)=>{
+    if (req.body.name!="" && req.params.id) {
+        let indexMembers=""
+        for (let index = 1; index < members.length; index++) {
+            if (req.params.id==members[index].id) {
+                indexMembers=index
+            }
+            
+        }
+        members[indexMembers].name=req.body.name
+        res.json(success(members[indexMembers]))
+    }else{
+        res.status(401).json(error("body vide!"))
+    }
 })
 
 app.listen(8080,()=>{
