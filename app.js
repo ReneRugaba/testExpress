@@ -57,7 +57,7 @@ app.put(APP_PUT,(req,res)=>{
             
         }
         members[indexMembers].name=req.body.name
-        res.json(success(members[indexMembers]))
+        res.status(201).json(success(members[indexMembers]))
     }else{
         res.status(401).json(error("body vide!"))
     }
