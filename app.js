@@ -3,68 +3,105 @@ const express=require("express");
 const morgan = require("morgan");
 const {success,error}= require("functionStatus")
 const app= express()
+const mysql=require("mysql")
+const db=mysql.createConnection({
+    host:"localhost",
+    database:"nodejs",
+    user:"root",
+    password:""
+})
 
 
+// const members=[
+//     {
+//         id:1,
+//         name:'Jean'
+//     },
+//     {
+//         id:2,
+//         name:'Julie'
+//     },
+//     {
+//         id:3,
+//         name:'François'
+//     }
+// ]
+db.connect((err)=>{
+    if (err) {
+        console.log(err.message)
+    }else{
+        console.log("Connected!")
 
-const members=[
-    {
-        id:1,
-        name:'Jean'
-    },
-    {
-        id:2,
-        name:'Julie'
-    },
-    {
-        id:3,
-        name:'François'
-    }
-]
-app.use(morgan("dev"))
-let MembersRouter= express.Router()
+        app.use(morgan("dev"))
+        let MembersRouter= express.Router()
 
-app.use(express.json()) 
-app.use(express.urlencoded({ extended: true }))
+        app.use(express.json()) 
+        app.use(express.urlencoded({ extended: true }))
 
-MembersRouter.route("/")
-    .get((req,res)=>{
-            if (req.query.max && req.query.max > 0) {
-                res.send(members.slice(0,req.query.max))
-            }else{
-                res.send(members)
-            }
-        })
-
-    .post((req,res)=>{
-            if (req.body.name!="") {
-                members.push({
-                    id:members.length+1,
-                    name:req.body.name
-                })
-                res.status(201).json(success(members))
-            }else{
-                res.status(401).json(error("body vide!"))
-            }
-         })
-
-MembersRouter.route("/:id")
-    .put((req,res)=>{
-            if (req.body.name!="" && req.params.id) {
-                let indexMembers=""
-                for (let index = 1; index < members.length; index++) {
-                    if (req.params.id==members[index].id) {
-                        indexMembers=index
+        MembersRouter.route("/")
+            .get((req,res)=>{
+                    if (req.query.max && req.query.max > 0) {
+                       db.query("SELECT * FROM members",(err,results)=>{
+                        let members=results
+                           if (err || req.query.max > members.length) {
+                               return res.status(500).json(error("Incorrect request!"))
+                           }else{
+                            res.send(members.slice(0,req.query.max))
+                           }
+                           
+                           
+                       })
+                    }else{
+                        db.query("SELECT * FROM members",(err,result)=>{
+                            if (err) {
+                                throw err
+                            }else{
+                                let members=result
+                            if (members) {
+                                res.status(200).json(members)
+                            }
+                            }
+                            
+                        })
+                        
                     }
-                }
-                members[indexMembers].name=req.body.name
-                res.status(201).json(success(members[indexMembers]))
-            }else{
-                res.status(401).json(error("body vide!"))
+                })
+
+            .post((req,res)=>{
+                    if (req.body.name!="") {
+                       
+                       db.query("INSERT INTO members(name) values(?)",[req.body.name],(err,result)=>{
+                        if (err) {
+                            res.status(500).json(error("Incorrect request!"))
+                        }else{
+                            res.status(201).json(success(result))
+                        }
+                       })
+                    }else{
+                        res.status(401).json(error("body empty!"))
+                    }
+                })
+
+        MembersRouter.route("/:id")
+            .put((req,res)=>{
+                    if (req.body.name!="" && req.params.id) {
+                        let indexMembers=""
+                        for (let index = 1; index < members.length; index++) {
+                            if (req.params.id==members[index].id) {
+                                indexMembers=index
+                            }
+                        }
+                        members[indexMembers].name=req.body.name
+                        res.status(201).json(success(members[indexMembers]))
+                    }else{
+                        res.status(401).json(error("body vide!"))
+                    }
+                })
+
+        app.use("/api/v1/members", MembersRouter)
+
+        app.listen(8080,()=>{
+            console.log("app started!")
+        })
             }
-         })
-
-app.use("/api/v1/members", MembersRouter)
-
-app.listen(8080,()=>{
-    console.log("app started!")
 })
