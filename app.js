@@ -85,19 +85,19 @@ db.connect((err)=>{
         MembersRouter.route("/:id")
             .put((req,res)=>{
                     if (req.body.name!="" && req.params.id) {
-                        let indexMembers=""
-                        for (let index = 1; index < members.length; index++) {
-                            if (req.params.id==members[index].id) {
-                                indexMembers=index
+                        db.query("UPDATE members SET name=? WHERE id=?",[req.body.name,req.params.id],(err,result)=>{
+
+                            if (err) {
+                                res.status(500).json(error("bad request!"))
+                            }else{
+                                res.status(201).json(success(result.message))
                             }
-                        }
-                        members[indexMembers].name=req.body.name
-                        res.status(201).json(success(members[indexMembers]))
+                        })
                     }else{
                         res.status(401).json(error("body vide!"))
                     }
                 })
-
+ 
         app.use("/api/v1/members", MembersRouter)
 
         app.listen(8080,()=>{
