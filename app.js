@@ -1,15 +1,12 @@
 require("babel-register");
 const express=require("express");
 const morgan = require("morgan");
-const {success,error}= require("functionStatus")
+const {success,error}= require("./assets/functionStatus")
 const app= express()
-const mysql=require("mysql")
-const db=mysql.createConnection({
-    host:"localhost",
-    database:"nodejs",
-    user:"root",
-    password:""
-})
+const config = require("./assets/config.json")
+const mysql=require("mysql");
+
+const db=mysql.createConnection(config.bdConnect)
 
 
 // const members=[
@@ -97,10 +94,26 @@ db.connect((err)=>{
                         res.status(401).json(error("body vide!"))
                     }
                 })
- 
-        app.use("/api/v1/members", MembersRouter)
+            .delete((req,res)=>{
+                if (req.params.id && req.params.id !=undefined) {
+                    db.query("DELETE FROM members WHERE id=?",[req.params.id],(err,result)=>{
+                        if (err) {
+                            res.status(500).json(error("Bad request!"))
+                        }else{
+                            if (result.affectedRows==0) {
+                                res.status(404).json(error("id unknow!"))
+                            }else{
+                                res.status(200).json(success(result))
+                            }
+                        }
+                    })
+                }else{
+                    res.status(500).json(error("Bad request!"))
+                }
+            })
+        app.use(config.rootApi+"/members", MembersRouter)
 
-        app.listen(8080,()=>{
+        app.listen(config.port,()=>{
             console.log("app started!")
         })
             }

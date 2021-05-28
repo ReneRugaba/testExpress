@@ -1,0 +1,10 @@
+{
+    "rootApi":"/api/v1",
+    "bdConnect":{
+        "host":"localhost",
+        "database":"nodejs",
+        "user":"root",
+        "password":""
+    },
+    "port":8080
+}
