@@ -15,13 +15,11 @@ let Members=class{
     static getMemeberById(id){
         return new Promise((resolve,reject)=>{
             db.query("SELECT * FROM members WHERE id=?",[id])
-            .then(res=>{
-                if (res[0]!=undefined) {
-                    resolve(res[0])
-                }else{
-                    resolve(undefined)
-                }
-            })
+            .then(res=>res[0]!=undefined?
+                resolve(res[0])
+                :
+                resolve(undefined)
+                )
             .catch(err=>reject(err))
         })
     }
@@ -72,7 +70,7 @@ let Members=class{
      * @returns post new Member
      */
     static postNewMember(reqBody){
-        if (reqBody.name!=undefined) {
+        if (reqBody!=undefined) {
             return new Promise((resolve,reject)=>{
                     db.query("INSERT INTO members(name) values(?)",[reqBody])
                 .then(res=>{

@@ -14,7 +14,7 @@ exports.error=(err)=>{
     }
 }
 
-exports.isSucces=(result)=>result.name!=undefined?this.success(result):this.error("body empty!")
+exports.isSucces=(result)=>result.affectedRows!=1?this.success(result):this.error("body empty!")
 
-exports.isErr=(result)=>result instanceof Error? this.error("Internal error!"):this.success(result)
+exports.isErr=(result)=>result instanceof Error? this.error("Internal error!"):this.isSucces(result)
 

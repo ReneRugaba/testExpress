@@ -6,5 +6,20 @@
         "user":"root",
         "password":""
     },
-    "port":8080
+    "port":8080,
+    "error":{
+        "BadRequest":"Bad request!",
+        "noUpdate":"Aucune modification n'a put être faite!",
+        "unKwowMembers":"Unknow member!"
+    },
+    "success":{
+        "updateSuccess":"Update member succesful!",
+        "deleteMember":"Delete member succesful!"
+    },
+    "status":{
+        "ok":200,
+        "internalError":500,
+        "unKnow":404,
+        "unAuthorized":401
+    }
 }

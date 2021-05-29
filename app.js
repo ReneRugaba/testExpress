@@ -10,70 +10,69 @@ mysql.createConnection(config.bdConnect)
 
 .then(connect=>{
     const members=require("./assets/classes/Members-class")(connect,config)
+    //indique connection bdd
     console.log("Connected!")
 
+    //gère les logue requêtes
     app.use(morgan)
     let MembersRouter= express.Router()
 
-    app.use(express.json()) 
+    // app.use(express.json()) 
     app.use(express.urlencoded({ extended: true }))
 
+    
     MembersRouter.route("/")
-        //recupéré un membre
+        //recupéré un membre ou tous les membres
         .get((req,res)=>{
                 if (req.query.id && req.query.id > 0) {
                    members.getMemeberById(req.query.id)
                    .then(member=>member!=undefined?
-                    res.status(200).json(success(member))
+                    res.status(config.status.ok).json(success(member))
                     : 
-                    res.status(404).json(error("Aucun membre ne correspond à la recherche!"))
+                    res.status(config.status.unKnow).json(error(config.error.unKwowMembers))
                     )
-                   .catch(err=>res.status(500).json(error(err.message)))
-                }else{
+                   .catch(err=>res.status(config.status.internalError).json(error(err.message)))
+                }else
                     members.getAllMembers()
-                    .then(result=>res.status(200).json(success(result)))
-                    .catch(err=>res.status(500).json(error(err.message)))
-                }
+                    .then(result=>res.status(config.status.ok).json(success(result)))
+                    .catch(err=>res.status(config.status.internalError).json(error(err.message)))
             })
-
+        //ajoute un membre
         .post(async(req,res)=>{
                let member= await members.postNewMember(req.body.name)
                     res.json(isErr(member))
             })
 
     MembersRouter.route("/:id")
+    //modifie membre 
         .put((req,res)=>{
                 if (req.body.name!="" && req.params.id) {
                     members.updateMemberById(req.params.id,req.body.name)
                     .then(result=>result ==1 ?
-                        res.status(200).json(success("Modification effectué!"))
+                        res.status(config.status.ok).json(success(config.success.updateSuccess))
                         :
-                        res.status(500).json(error("Aucune modification n'a put être faite!")) 
+                        res.status(config.status.internalError).json(error(config.error.noUpdate)) 
                     )
-                }else{
-                    res.status(401).json(error("body vide!"))
                 }
+                else res.status(config.status.internalError).json(error(config.error.BadRequest))
+                
             })
+    //supprime membre
         .delete((req,res)=>{
             if (req.params.id && req.params.id !=undefined) {
                 members.deleteMember(req.params.id)
                 .then(result=>result!=1?
-                    res.status(500).json(error("Unknow members!"))
+                    res.status(config.status.internalError).json(error(config.error.BadRequest))
                     :
-                    res.status(200).json(success("Success!"))
+                    res.status(config.status.ok).json(success(config.success.deleteMember))
                     )
-                .catch(err=>res.status(500).json(err))
-            }else{
-                res.status(500).json(error("Bad request!"))
+                .catch(err=>res.status(config.status.internalError).json(err))
             }
+            else res.status(config.status.internalError).json(error(config.error.BadRequest))
+            
         })
     app.use(config.rootApi+"/members", MembersRouter)
-
-    app.listen(config.port,()=>{
-        console.log("app started!")
-    })
-}).catch(err=>{
-    console.log(err.message)
-})
+    app.listen(config.port,()=>console.log("app started!"))
+}).catch(err=>console.log(err.message))
 
 
