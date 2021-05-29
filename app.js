@@ -1,12 +1,12 @@
 require("babel-register");
 const express=require("express");
 const morgan = require("morgan")("dev");
-const {success,error}= require("./assets/functionStatus")
+const {success,error,isErr}= require("./assets/functionStatus")
 const app= express()
 const config = require("./assets/config.json")
 const mysql=require("promise-mysql");
 
-const db=mysql.createConnection(config.bdConnect)
+mysql.createConnection(config.bdConnect)
 
 .then(connect=>{
     const members=require("./assets/classes/Members-class")(connect,config)
@@ -22,54 +22,33 @@ const db=mysql.createConnection(config.bdConnect)
         .get((req,res)=>{
                 if (req.query.max && req.query.max > 0) {
                    members.getMemeberById(req.query.max)
-                   .then(member=>{
-                       if (member!=undefined) {
-                        res.status(200).json(success(member))
-                       }else{
-                           res.status(404).json(error("Aucun membre ne correspond à la recherche!"))
-                       }
-                   })
-                   .catch(err=>{
-                       res.status(500).json(error(err.message))
-                   })
+                   .then(member=>member!=undefined?
+                    res.status(200).json(success(member))
+                    : 
+                    res.status(404).json(error("Aucun membre ne correspond à la recherche!"))
+                    )
+                   .catch(err=>res.status(500).json(error(err.message)))
                 }else{
                     members.getAllMembers()
-                    .then(result=>{
-                        res.status(200).json(success(result))
-                    })
-                    .catch(err=>{
-                        res.status(500).json(error(err.message))
-                    })
+                    .then(result=>res.status(200).json(success(result)))
+                    .catch(err=>res.status(500).json(error(err.message)))
                 }
             })
 
-        .post((req,res)=>{
-                if (req.body.name!="") {
-                   members.postNewMember(req.body.name)
-                   .then(result=>{
-                       if (result==1) {
-                           res.status(201).json(success(result))
-                       }else{
-                           res.status(500).json(error("Internal error!"))
-                       }
-                   })
-                   .catch()
-                }else{
-                    connect.status(401).json(error("body empty!"))
-                }
+        .post(async(req,res)=>{
+               let member= await members.postNewMember(req.body.name)
+                    res.json(isErr(member))
             })
 
     MembersRouter.route("/:id")
         .put((req,res)=>{
                 if (req.body.name!="" && req.params.id) {
                     members.updateMemberById(req.params.id,req.body.name)
-                    .then(result=>{
-                      if (result ==1 ) {
+                    .then(result=>result ==1 ?
                         res.status(200).json(success("Modification effectué!"))
-                      }else{
-                          res.status(500).json(error("Aucune modification n'a put être faite!"))
-                      }
-                    })
+                        :
+                        res.status(500).json(error("Aucune modification n'a put être faite!")) 
+                    )
                 }else{
                     res.status(401).json(error("body vide!"))
                 }

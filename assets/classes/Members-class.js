@@ -72,15 +72,19 @@ let Members=class{
      * @returns post new Member
      */
     static postNewMember(reqBody){
-        return new Promise((resolve,reject)=>{
-            db.query("INSERT INTO members(name) values(?)",[reqBody])
-            .then(res=>{
-                resolve(res.affectedRows)
+        if (reqBody.name!=undefined) {
+            return new Promise((resolve,reject)=>{
+                    db.query("INSERT INTO members(name) values(?)",[reqBody])
+                .then(res=>{
+                    resolve(res.affectedRows)
+                })
+                .catch(err=>{
+                    reject(err)
+                })
             })
-            .catch(err=>{
-                reject(err)
-            })
-        })
+        }else{
+            return new Error()
+        }
     }
 
     static deleteMember(id){
