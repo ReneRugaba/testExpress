@@ -19,9 +19,10 @@ mysql.createConnection(config.bdConnect)
     app.use(express.urlencoded({ extended: true }))
 
     MembersRouter.route("/")
+        //recupéré un membre
         .get((req,res)=>{
-                if (req.query.max && req.query.max > 0) {
-                   members.getMemeberById(req.query.max)
+                if (req.query.id && req.query.id > 0) {
+                   members.getMemeberById(req.query.id)
                    .then(member=>member!=undefined?
                     res.status(200).json(success(member))
                     : 
@@ -56,13 +57,11 @@ mysql.createConnection(config.bdConnect)
         .delete((req,res)=>{
             if (req.params.id && req.params.id !=undefined) {
                 members.deleteMember(req.params.id)
-                .then(result=>{
-                    if (result!=1) {
-                        res.status(500).json(error("Unknow members!"))
-                    }else{
-                        res.status(200).json(success("Success!"))
-                    }
-                })
+                .then(result=>result!=1?
+                    res.status(500).json(error("Unknow members!"))
+                    :
+                    res.status(200).json(success("Success!"))
+                    )
                 .catch(err=>res.status(500).json(err))
             }else{
                 res.status(500).json(error("Bad request!"))

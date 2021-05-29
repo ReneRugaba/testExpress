@@ -1,3 +1,5 @@
+require("babel-register");
+
 exports.success=(result)=>{
     return{
         status:"Success",
